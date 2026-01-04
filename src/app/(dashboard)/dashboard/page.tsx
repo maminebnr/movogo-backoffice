@@ -390,8 +390,10 @@ export default function DashboardPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-zinc-500">
-                No data available for the selected period
+              <div className="h-[300px] flex flex-col items-center justify-center text-zinc-400">
+                <Package className="w-16 h-16 mb-4 opacity-50" />
+                <p className="text-lg font-medium text-zinc-600">No delivery data available</p>
+                <p className="text-sm text-zinc-500 mt-1">Check back later for delivery statistics</p>
               </div>
             )}
           </CardContent>
