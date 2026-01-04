@@ -54,17 +54,43 @@ export default function DashboardPage() {
   // Prepare chart data
   // App Gain History Chart
   const gainChartData = gainHistory
-    .map((item: any) => {
-      const dateValue = item.date ? new Date(item.date) : null;
-      const isValidDate = dateValue && !isNaN(dateValue.getTime());
+    .map((item: any, index: number) => {
+      let dateValue: Date | null = null;
+      let dateString = 'N/A';
+      
+      // Try to parse the date in various formats
+      if (item.date) {
+        dateValue = new Date(item.date);
+        // If date is invalid, try parsing as timestamp or other formats
+        if (isNaN(dateValue.getTime())) {
+          // Try as timestamp
+          const timestamp = typeof item.date === 'number' ? item.date : parseInt(item.date);
+          if (!isNaN(timestamp)) {
+            dateValue = new Date(timestamp);
+          }
+        }
+        
+        // If still invalid, use index as fallback
+        if (isNaN(dateValue.getTime())) {
+          dateValue = new Date();
+          dateValue.setDate(dateValue.getDate() - (gainHistory.length - index));
+        }
+        
+        dateString = dateValue.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        // No date provided, use index-based date
+        dateValue = new Date();
+        dateValue.setDate(dateValue.getDate() - (gainHistory.length - index));
+        dateString = dateValue.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+      
       return {
-        date: isValidDate ? dateValue.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A',
-        dateValue: isValidDate ? dateValue.getTime() : 0, // For sorting
-        appGain: item.appGain || 0,
-        totalPrice: item.totalPrice || 0,
+        date: dateString,
+        dateValue: dateValue.getTime(),
+        appGain: Number(item.appGain) || 0,
+        totalPrice: Number(item.totalPrice) || 0,
       };
     })
-    .filter((item: any) => item.dateValue > 0) // Remove invalid dates
     .sort((a: any, b: any) => a.dateValue - b.dateValue) // Sort by date
     .slice(-10) // Last 10 entries
     .map(({ dateValue, ...rest }: any) => rest); // Remove dateValue, keep only display date
@@ -94,16 +120,33 @@ export default function DashboardPage() {
   if (todayData && typeof todayData === 'object' && 'todaysDeliveries' in todayData && Array.isArray((todayData as any).todaysDeliveries)) {
     (todayData as any).todaysDeliveries.forEach((delivery: any) => {
       if (delivery.createdAt) {
-        const date = new Date(delivery.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        dailyDeliveries[date] = (dailyDeliveries[date] || 0) + 1;
+        try {
+          const dateObj = new Date(delivery.createdAt);
+          if (!isNaN(dateObj.getTime())) {
+            const date = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            dailyDeliveries[date] = (dailyDeliveries[date] || 0) + 1;
+          }
+        } catch (e) {
+          // Skip invalid dates
+        }
       }
     });
   }
   
   const dailyChartData = Object.entries(dailyDeliveries)
-    .map(([date, count]) => ({ date, deliveries: count }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(-7); // Last 7 days
+    .map(([date, count]) => {
+      // Try to parse the date for sorting
+      const dateObj = new Date(date);
+      return {
+        date,
+        deliveries: count,
+        dateValue: isNaN(dateObj.getTime()) ? 0 : dateObj.getTime()
+      };
+    })
+    .filter(item => item.dateValue > 0) // Remove invalid dates
+    .sort((a, b) => a.dateValue - b.dateValue)
+    .slice(-7) // Last 7 days
+    .map(({ dateValue, ...rest }) => rest); // Remove dateValue
 
   // Active Carriers
   const activeCarriers = (carriersData && typeof carriersData === 'object' && 'getAllCarriers' in carriersData && Array.isArray((carriersData as any).getAllCarriers)) 
@@ -111,6 +154,22 @@ export default function DashboardPage() {
     : 0;
 
   const isLoading = todayLoading || activeLoading || gainLoading || carriersLoading || sendersLoading || accountsLoading;
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="p-2 bg-white border rounded-md shadow-md text-sm">
+          <p className="font-semibold">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={`item-${index}`} style={{ color: entry.color }}>
+              {entry.name}: {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value} TND
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="space-y-6">
@@ -238,8 +297,8 @@ export default function DashboardPage() {
                 <AreaChart data={gainChartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip formatter={(value: any) => `${value.toFixed(2)} TND`} />
+                  <YAxis tickFormatter={(value) => `${value} TND`} />
+                  <Tooltip content={<CustomTooltip />} />
                   <Legend />
                   <Area 
                     type="monotone" 
@@ -263,7 +322,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-zinc-500">
-                No data available
+                {gainHistory.length === 0 ? "No revenue data available" : "No valid date data found"}
               </div>
             )}
           </CardContent>
@@ -326,12 +385,15 @@ export default function DashboardPage() {
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="deliveries" fill="#f97316" radius={[8, 8, 0, 0]} />
+                  <Legend />
+                  <Bar dataKey="deliveries" fill="#f97316" name="Deliveries" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-zinc-500">
-                No data available
+                {todayData && typeof todayData === 'object' && 'todaysDeliveries' in todayData && Array.isArray((todayData as any).todaysDeliveries) && (todayData as any).todaysDeliveries.length === 0 
+                  ? "No deliveries found" 
+                  : "No delivery date data available"}
               </div>
             )}
           </CardContent>
@@ -353,13 +415,13 @@ export default function DashboardPage() {
                 <LineChart data={gainChartData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip formatter={(value: any) => `${value.toFixed(2)} TND`} />
+                  <YAxis tickFormatter={(value) => `${value} TND`} />
+                  <Tooltip content={<CustomTooltip />} />
                   <Legend />
                   <Line 
                     type="monotone" 
                     dataKey="appGain" 
-                    stroke="#f97316" 
+                    stroke="#10b981" 
                     strokeWidth={2}
                     name="App Gain"
                   />
@@ -367,7 +429,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-zinc-500">
-                No data available
+                {gainHistory.length === 0 ? "No revenue data available" : "No valid date data found"}
               </div>
             )}
           </CardContent>
