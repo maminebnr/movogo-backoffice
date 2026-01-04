@@ -54,12 +54,20 @@ export default function DashboardPage() {
   // Prepare chart data
   // App Gain History Chart
   const gainChartData = gainHistory
-    .map((item: any) => ({
-      date: item.date ? new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A',
-      appGain: item.appGain || 0,
-      totalPrice: item.totalPrice || 0,
-    }))
-    .slice(-10); // Last 10 entries
+    .map((item: any) => {
+      const dateValue = item.date ? new Date(item.date) : null;
+      const isValidDate = dateValue && !isNaN(dateValue.getTime());
+      return {
+        date: isValidDate ? dateValue.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A',
+        dateValue: isValidDate ? dateValue.getTime() : 0, // For sorting
+        appGain: item.appGain || 0,
+        totalPrice: item.totalPrice || 0,
+      };
+    })
+    .filter((item: any) => item.dateValue > 0) // Remove invalid dates
+    .sort((a: any, b: any) => a.dateValue - b.dateValue) // Sort by date
+    .slice(-10) // Last 10 entries
+    .map(({ dateValue, ...rest }: any) => rest); // Remove dateValue, keep only display date
 
   // Delivery Status Distribution
   const statusCounts: Record<string, number> = {};
