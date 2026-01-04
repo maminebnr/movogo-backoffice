@@ -391,9 +391,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-zinc-500">
-                {todayData && typeof todayData === 'object' && 'todaysDeliveries' in todayData && Array.isArray((todayData as any).todaysDeliveries) && (todayData as any).todaysDeliveries.length === 0 
-                  ? "No deliveries found" 
-                  : "No delivery date data available"}
+                No data available for the selected period
               </div>
             )}
           </CardContent>
