@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 806 644" role="img" aria-label="Movogo logo">
+  <title>Movogo</title>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#ff7a00"/>
+      <stop offset="1" stop-color="#ff9d2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="806" height="644" fill="white"/>
+  <!-- Simple placeholder mark approximating the brand colors; replace with the official asset -->
+  <g transform="translate(40,40)">
+    <path d="M80 260 C140 140 300 140 520 190 C640 216 720 200 740 240 C760 280 710 320 600 320 C540 320 440 280 360 280 C300 280 240 340 140 360 C80 372 30 352 20 330 C10 308 32 292 60 290 C100 286 132 300 180 280 C220 264 236 240 260 220" fill="url(#g)" opacity="0.9"/>
+    <circle cx="620" cy="160" r="26" fill="#ff7a00"/>
+    <circle cx="627" cy="156" r="7" fill="#fff"/>
+  </g>
+  <g transform="translate(120,560)" fill="#ff7a00">
+    <path d="M0 0h46c36 0 57 18 57 48s-21 48-57 48H0V0zm40 30v36h6c13 0 21-6 21-18s-8-18-21-18h-6zM138 0h40v96h-40V0zm64 0h38l46 56V0h40v96h-36l-48-58v58h-40V0zm150 0h44l34 96h-42l-4-14h-24l-4 14h-40l36-96zm10 62h12l-6-22-6 22zM462 0h44l34 96h-42l-4-14h-24l-4 14h-40l36-96zm10 62h12l-6-22-6 22z"/>
+  </g>
+</svg>
+
+
