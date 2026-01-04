@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Truck, Package, Users, TrendingUp, Shield, Zap } from "lucide-react";
+import { Truck, Package, Users, TrendingUp, Shield, Zap, BarChart3, MapPin, Clock, CheckCircle2 } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -130,23 +130,84 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* More Details Section */}
       <section className="container mx-auto px-4 py-16">
-        <Card className="max-w-2xl mx-auto bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Ready to Get Started?</CardTitle>
-            <CardDescription className="text-base">
-              Sign in to access the admin dashboard and start managing your delivery business
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <Link href="/login">
-              <Button size="lg" className="text-lg px-8">
-                Sign In to Dashboard
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-zinc-900 mb-4">Why Choose Movogo Backoffice?</h2>
+            <p className="text-zinc-600 text-lg">Comprehensive management tools for your delivery operations</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="overflow-hidden border-2 hover:border-orange-300 transition-colors group">
+              <div className="relative h-48 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGM0LjQxOCAwIDgtMy41ODIgOC04cy0zLjU4Mi04LTgtOC04IDMuNTgyLTggOCAzLjU4MiA4IDggOHoiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+                <Clock className="w-20 h-20 text-white opacity-90 group-hover:scale-110 transition-transform" />
+              </div>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                  Real-Time Tracking
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-zinc-600">
+                  Monitor deliveries in real-time with live status updates. Track today&apos;s deliveries and active shipments with instant notifications and status changes.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden border-2 hover:border-orange-300 transition-colors group">
+              <div className="relative h-48 bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGM0LjQxOCAwIDgtMy41ODIgOC04cy0zLjU4Mi04LTgtOC04IDMuNTgyLTggOCAzLjU4MiA4IDggOHoiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+                <BarChart3 className="w-20 h-20 text-white opacity-90 group-hover:scale-110 transition-transform" />
+              </div>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-purple-600" />
+                  Comprehensive Analytics
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-zinc-600">
+                  Get detailed insights into your business performance with revenue trends, delivery statistics, and financial analytics to make data-driven decisions.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden border-2 hover:border-orange-300 transition-colors group">
+              <div className="relative h-48 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGM0LjQxOCAwIDgtMy41ODIgOC04cy0zLjU4Mi04LTgtOC04IDMuNTgyLTggOCAzLjU4MiA4IDggOHoiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+                <Users className="w-20 h-20 text-white opacity-90 group-hover:scale-110 transition-transform" />
+              </div>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Users className="w-5 h-5 text-green-600" />
+                  User Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-zinc-600">
+                  Efficiently manage carriers, senders, and accounts. Control access levels, monitor wallet balances, and track user activity from one central dashboard.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="overflow-hidden border-2 hover:border-orange-300 transition-colors group">
+              <div className="relative h-48 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGM0LjQxOCAwIDgtMy41ODIgOC04cy0zLjU4Mi04LTgtOC04IDMuNTgyLTggOCAzLjU4MiA4IDggOHoiIGZpbGw9IndoaXRlIiBmaWxsLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+                <Zap className="w-20 h-20 text-white opacity-90 group-hover:scale-110 transition-transform" />
+              </div>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-orange-600" />
+                  Flexible Configuration
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-zinc-600">
+                  Customize vehicle types, manage delivery settings, and configure system parameters to match your business requirements and operational needs.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </section>
 
       {/* Footer */}
@@ -158,12 +219,13 @@ export default function LandingPage() {
               <span className="font-semibold text-orange-600">Movogo Backoffice</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-zinc-600">
-              <span>© 2025 Movogo. All rights reserved.</span>
+              <span>© {new Date().getFullYear()} Movogo. All rights reserved.</span>
             </div>
           </div>
           <Separator className="my-4" />
-          <div className="text-center text-sm text-zinc-500">
+          <div className="text-center text-sm text-zinc-500 space-y-2">
             <p>Administration dashboard for delivery management</p>
+            <p>Made by <span className="font-semibold text-zinc-700">Persista Technology</span></p>
           </div>
         </div>
       </footer>
