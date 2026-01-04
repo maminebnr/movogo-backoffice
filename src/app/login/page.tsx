@@ -39,7 +39,7 @@ export default function LoginPage() {
         },
       });
 
-      if (data?.login?.accessToken) {
+      if (data && typeof data === 'object' && 'login' in data && (data as any).login && typeof (data as any).login === 'object' && 'accessToken' in (data as any).login) {
         // Create a minimal user object since the API doesn't return user info in login response
         // We'll use the email from the login form and set a default role
         const user = {
@@ -47,7 +47,7 @@ export default function LoginPage() {
           email: email,
           role: "ADMIN", // Default role, can be updated after fetching user profile
         };
-        authLogin(data.login.accessToken, user);
+        authLogin((data as any).login.accessToken, user);
         toast.success("Login successful!");
         router.push("/dashboard");
       }

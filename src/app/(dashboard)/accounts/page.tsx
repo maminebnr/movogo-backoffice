@@ -116,8 +116,8 @@ export default function AccountsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data?.getAllAccounts?.length > 0 ? (
-                  data.getAllAccounts.map((account: any) => (
+                {data && typeof data === 'object' && 'getAllAccounts' in data && Array.isArray((data as any).getAllAccounts) && (data as any).getAllAccounts.length > 0 ? (
+                  ((data as any).getAllAccounts as any[]).map((account: any) => (
                     <TableRow key={account._id}>
                       <TableCell className="font-medium">
                         {account.firstName && account.lastName 

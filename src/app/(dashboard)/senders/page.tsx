@@ -32,8 +32,8 @@ export default function SendersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.getAllSenders?.length > 0 ? (
-                data.getAllSenders.map((sender: any) => (
+              {data && typeof data === 'object' && 'getAllSenders' in data && Array.isArray((data as any).getAllSenders) && (data as any).getAllSenders.length > 0 ? (
+                ((data as any).getAllSenders as any[]).map((sender: any) => (
                   <TableRow key={sender._id}>
                     <TableCell className="font-medium">
                       {sender.firstName && sender.lastName 

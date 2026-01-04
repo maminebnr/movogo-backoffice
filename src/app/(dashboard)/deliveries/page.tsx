@@ -43,8 +43,8 @@ export default function DeliveriesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {todayData?.todaysDeliveries?.length > 0 ? (
-                    todayData.todaysDeliveries.map((delivery: any) => (
+                  {todayData && typeof todayData === 'object' && 'todaysDeliveries' in todayData && Array.isArray((todayData as any).todaysDeliveries) && (todayData as any).todaysDeliveries.length > 0 ? (
+                    ((todayData as any).todaysDeliveries as any[]).map((delivery: any) => (
                       <TableRow key={delivery._id}>
                         <TableCell>
                           <Badge 
@@ -93,8 +93,8 @@ export default function DeliveriesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {activeData?.availableDeliveries?.length > 0 ? (
-                    activeData.availableDeliveries.map((delivery: any) => (
+                  {activeData && typeof activeData === 'object' && 'availableDeliveries' in activeData && Array.isArray((activeData as any).availableDeliveries) && (activeData as any).availableDeliveries.length > 0 ? (
+                    ((activeData as any).availableDeliveries as any[]).map((delivery: any) => (
                       <TableRow key={delivery._id}>
                         <TableCell>
                           <Badge 

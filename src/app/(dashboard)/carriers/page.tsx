@@ -36,8 +36,8 @@ export default function CarriersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.getAllCarriers?.length > 0 ? (
-                data.getAllCarriers.map((carrier: any) => (
+              {data && typeof data === 'object' && 'getAllCarriers' in data && Array.isArray((data as any).getAllCarriers) && (data as any).getAllCarriers.length > 0 ? (
+                ((data as any).getAllCarriers as any[]).map((carrier: any) => (
                   <TableRow key={carrier._id}>
                     <TableCell className="font-medium">
                       {carrier.firstName && carrier.lastName 

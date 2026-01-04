@@ -123,8 +123,8 @@ export default function VehiclesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.getVehicleTypes?.length > 0 ? (
-                data.getVehicleTypes.map((vehicle: any) => (
+              {data && typeof data === 'object' && 'getVehicleTypes' in data && Array.isArray((data as any).getVehicleTypes) && (data as any).getVehicleTypes.length > 0 ? (
+                ((data as any).getVehicleTypes as any[]).map((vehicle: any) => (
                   <TableRow key={vehicle._id}>
                     <TableCell className="font-medium">{vehicle.name}</TableCell>
                     <TableCell>{vehicle.description || "—"}</TableCell>

@@ -40,14 +40,14 @@ export default function DashboardPage() {
   const { data: accountsData, loading: accountsLoading } = useQuery(GET_ALL_ACCOUNTS);
 
   // Calculate KPIs
-  const todayCount = todayData?.todaysDeliveries?.length || 0;
-  const activeCount = activeData?.availableDeliveries?.length || 0;
-  const carriersCount = carriersData?.getAllCarriers?.length || 0;
-  const sendersCount = sendersData?.getAllSenders?.length || 0;
-  const accountsCount = accountsData?.getAllAccounts?.length || 0;
+  const todayCount = (todayData && typeof todayData === 'object' && 'todaysDeliveries' in todayData && Array.isArray((todayData as any).todaysDeliveries)) ? (todayData as any).todaysDeliveries.length : 0;
+  const activeCount = (activeData && typeof activeData === 'object' && 'availableDeliveries' in activeData && Array.isArray((activeData as any).availableDeliveries)) ? (activeData as any).availableDeliveries.length : 0;
+  const carriersCount = (carriersData && typeof carriersData === 'object' && 'getAllCarriers' in carriersData && Array.isArray((carriersData as any).getAllCarriers)) ? (carriersData as any).getAllCarriers.length : 0;
+  const sendersCount = (sendersData && typeof sendersData === 'object' && 'getAllSenders' in sendersData && Array.isArray((sendersData as any).getAllSenders)) ? (sendersData as any).getAllSenders.length : 0;
+  const accountsCount = (accountsData && typeof accountsData === 'object' && 'getAllAccounts' in accountsData && Array.isArray((accountsData as any).getAllAccounts)) ? (accountsData as any).getAllAccounts.length : 0;
   
   // Calculate app gain and total funds
-  const gainHistory = gainData?.getAppGainHistory || [];
+  const gainHistory = (gainData && typeof gainData === 'object' && 'getAppGainHistory' in gainData && Array.isArray((gainData as any).getAppGainHistory)) ? (gainData as any).getAppGainHistory : [];
   const appGain = gainHistory.reduce((sum: number, item: any) => sum + (item.appGain || 0), 0);
   const totalFunds = gainHistory.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
 
@@ -63,14 +63,18 @@ export default function DashboardPage() {
 
   // Delivery Status Distribution
   const statusCounts: Record<string, number> = {};
-  todayData?.todaysDeliveries?.forEach((delivery: any) => {
-    const status = delivery.status || 'UNKNOWN';
-    statusCounts[status] = (statusCounts[status] || 0) + 1;
-  });
-  activeData?.availableDeliveries?.forEach((delivery: any) => {
-    const status = delivery.status || 'UNKNOWN';
-    statusCounts[status] = (statusCounts[status] || 0) + 1;
-  });
+  if (todayData && typeof todayData === 'object' && 'todaysDeliveries' in todayData && Array.isArray((todayData as any).todaysDeliveries)) {
+    (todayData as any).todaysDeliveries.forEach((delivery: any) => {
+      const status = delivery.status || 'UNKNOWN';
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+  }
+  if (activeData && typeof activeData === 'object' && 'availableDeliveries' in activeData && Array.isArray((activeData as any).availableDeliveries)) {
+    (activeData as any).availableDeliveries.forEach((delivery: any) => {
+      const status = delivery.status || 'UNKNOWN';
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+  }
   
   const statusChartData = Object.entries(statusCounts).map(([name, value]) => ({
     name,
@@ -79,12 +83,14 @@ export default function DashboardPage() {
 
   // Daily Deliveries (group by date)
   const dailyDeliveries: Record<string, number> = {};
-  todayData?.todaysDeliveries?.forEach((delivery: any) => {
-    if (delivery.createdAt) {
-      const date = new Date(delivery.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      dailyDeliveries[date] = (dailyDeliveries[date] || 0) + 1;
-    }
-  });
+  if (todayData && typeof todayData === 'object' && 'todaysDeliveries' in todayData && Array.isArray((todayData as any).todaysDeliveries)) {
+    (todayData as any).todaysDeliveries.forEach((delivery: any) => {
+      if (delivery.createdAt) {
+        const date = new Date(delivery.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        dailyDeliveries[date] = (dailyDeliveries[date] || 0) + 1;
+      }
+    });
+  }
   
   const dailyChartData = Object.entries(dailyDeliveries)
     .map(([date, count]) => ({ date, deliveries: count }))
@@ -92,7 +98,9 @@ export default function DashboardPage() {
     .slice(-7); // Last 7 days
 
   // Active Carriers
-  const activeCarriers = carriersData?.getAllCarriers?.filter((c: any) => c.status === 'ACTIVE')?.length || 0;
+  const activeCarriers = (carriersData && typeof carriersData === 'object' && 'getAllCarriers' in carriersData && Array.isArray((carriersData as any).getAllCarriers)) 
+    ? (carriersData as any).getAllCarriers.filter((c: any) => c.status === 'ACTIVE').length 
+    : 0;
 
   const isLoading = todayLoading || activeLoading || gainLoading || carriersLoading || sendersLoading || accountsLoading;
 
@@ -272,7 +280,7 @@ export default function DashboardPage() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
