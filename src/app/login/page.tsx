@@ -11,6 +11,7 @@ import { useMutation } from "@apollo/client/react";
 import { LOGIN_MUTATION } from "@/lib/graphql/mutations";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const { isAuthenticated, login: authLogin } = useAuth();
@@ -54,19 +55,27 @@ export default function LoginPage() {
       console.error("Login error:", error);
       
       // Check if it's a fetch error (likely Chrome extension interference)
-      const isFetchError = error?.message?.includes("Failed to fetch") || 
-                          error?.networkError?.message?.includes("Failed to fetch");
+      const errorMsg = error?.message || "";
+      const networkErrorMsg = error?.networkError?.message || "";
+      const errorString = JSON.stringify(error);
       
-      let errorMessage = error?.networkError?.message || 
+      const isFetchError = errorMsg.includes("Failed to fetch") || 
+                          networkErrorMsg.includes("Failed to fetch") ||
+                          errorString.includes("Failed to fetch") ||
+                          error?.networkError?.error?.message?.includes("Failed to fetch");
+      
+      let errorMessage = networkErrorMsg ||
                         error?.graphQLErrors?.[0]?.message || 
-                        error?.message || 
+                        errorMsg || 
                         "Login failed. Please check your credentials and network connection.";
       
-      if (isFetchError) {
-        errorMessage = "Network request failed. This may be caused by a browser extension. Please try disabling extensions or using incognito mode.";
+      if (isFetchError || error?.networkError) {
+        errorMessage = "Network request blocked by browser extension. Please use incognito mode or disable extensions.";
       }
       
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        duration: 6000, // Show longer for important messages
+      });
     }
   };
 
@@ -79,6 +88,13 @@ export default function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="grid gap-4">
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
+              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium mb-1">Having login issues?</p>
+                <p className="text-xs">If requests fail, try using incognito mode or disable browser extensions.</p>
+              </div>
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input

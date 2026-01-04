@@ -31,7 +31,7 @@ const authLink = new ApolloLink((operation, forward) => {
 });
 
 const httpLink = new HttpLink({
-  uri: "https://apimovogo.persistatechnology.com/graphql",
+  uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || "https://apimovogo.persistatechnology.com/graphql",
   credentials: "include",
   fetchOptions: {
     mode: "cors",
