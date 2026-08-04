@@ -11,71 +11,73 @@ import { useMutation } from "@apollo/client/react";
 import { LOGIN_MUTATION } from "@/lib/graphql/mutations";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
-import { AlertCircle, Lock, Mail, Truck, Package, TrendingUp } from "lucide-react";
+import { Lock, Mail, Truck, Package, TrendingUp } from "lucide-react";
 
 export default function LoginPage() {
-  const { isAuthenticated, login: authLogin } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, login: authLogin } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState("medaminebnr@gmail.com");
-  const [password, setPassword] = useState("Password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [login, { loading }] = useMutation(LOGIN_MUTATION);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!authLoading && isAuthenticated) {
       router.push("/dashboard");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      const { data } = await login({
-        variables: { 
+      const result = await login({
+        variables: {
           input: {
             email,
             password,
-          }
+          },
         },
       });
 
-      if (data && typeof data === 'object' && 'login' in data && (data as any).login && typeof (data as any).login === 'object' && 'accessToken' in (data as any).login) {
-        // Create a minimal user object since the API doesn't return user info in login response
-        // We'll use the email from the login form and set a default role
-        const user = {
-          id: "", // Will be fetched later if needed
-          email: email,
-          role: "ADMIN", // Default role, can be updated after fetching user profile
-        };
-        authLogin((data as any).login.accessToken, user);
-        toast.success("Login successful!");
+      const payload = result.data as
+        | { login?: { accessToken?: string; message?: string } }
+        | null
+        | undefined;
+
+      const graphQLError =
+        result.error?.message ||
+        (result as { errors?: { message?: string }[] }).errors?.[0]?.message;
+
+      if (graphQLError && !payload?.login?.accessToken) {
+        toast.error(graphQLError, { duration: 6000 });
+        return;
+      }
+
+      if (payload?.login?.accessToken) {
+        authLogin(payload.login.accessToken, {
+          id: "",
+          email,
+          role: "ADMIN",
+        });
+        toast.success(payload.login.message || "Login successful!");
         router.push("/dashboard");
+        return;
       }
-    } catch (error: any) {
+
+      toast.error("Login failed. Please check your credentials.");
+    } catch (error: unknown) {
       console.error("Login error:", error);
-      
-      // Check if it's a fetch error (likely Chrome extension interference)
-      const errorMsg = error?.message || "";
-      const networkErrorMsg = error?.networkError?.message || "";
-      const errorString = JSON.stringify(error);
-      
-      const isFetchError = errorMsg.includes("Failed to fetch") || 
-                          networkErrorMsg.includes("Failed to fetch") ||
-                          errorString.includes("Failed to fetch") ||
-                          error?.networkError?.error?.message?.includes("Failed to fetch");
-      
-      let errorMessage = networkErrorMsg ||
-                        error?.graphQLErrors?.[0]?.message || 
-                        errorMsg || 
-                        "Login failed. Please check your credentials and network connection.";
-      
-      if (isFetchError || error?.networkError) {
-        errorMessage = "Network request blocked by browser extension. Please use incognito mode or disable extensions.";
-      }
-      
-      toast.error(errorMessage, {
-        duration: 6000, // Show longer for important messages
-      });
+      const err = error as {
+        message?: string;
+        graphQLErrors?: { message?: string }[];
+        networkError?: { message?: string };
+      };
+      const errorMessage =
+        err?.graphQLErrors?.[0]?.message ||
+        err?.networkError?.message ||
+        err?.message ||
+        "Login failed. Please check your credentials and network connection.";
+      toast.error(errorMessage, { duration: 6000 });
     }
   };
 
@@ -137,13 +139,6 @@ export default function LoginPage() {
           </CardHeader>
           <form onSubmit={handleSubmit}>
           <CardContent className="grid gap-4">
-            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
-              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-medium mb-1">Having login issues?</p>
-                <p className="text-xs">If requests fail, try using incognito mode or disable browser extensions.</p>
-              </div>
-            </div>
             <div className="grid gap-2">
               <Label htmlFor="email" className="flex items-center gap-2 text-sm font-medium">
                 <Mail className="w-4 h-4 text-orange-600" />

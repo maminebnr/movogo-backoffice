@@ -8,6 +8,7 @@ export const GET_ALL_CARRIERS = gql`
       lastName
       email
       walletBalance
+      totalEarnings
       status
     }
   }
@@ -26,13 +27,14 @@ export const GET_ALL_SENDERS = gql`
 `;
 
 export const GET_ALL_ACCOUNTS = gql`
-  query GetAllAccounts {
-    getAllAccounts {
+  query GetAllAccounts($pagination: PaginationInput) {
+    getAllAccounts(pagination: $pagination) {
       _id
       firstName
       lastName
       email
       role
+      verified
     }
   }
 `;
@@ -46,6 +48,9 @@ export const GET_TODAY_DELIVERIES = gql`
       senderName
       carrierId
       carrierName
+      totalPrice
+      distanceKm
+      deliveryOption
       createdAt
     }
   }
@@ -60,6 +65,27 @@ export const GET_ACTIVE_DELIVERIES = gql`
       senderName
       carrierId
       carrierName
+      totalPrice
+      distanceKm
+      deliveryOption
+    }
+  }
+`;
+
+export const GET_ALL_DELIVERIES = gql`
+  query GetAllDeliveries {
+    getAllDeliveries {
+      _id
+      status
+      senderId
+      senderName
+      carrierId
+      carrierName
+      totalPrice
+      distanceKm
+      deliveryOption
+      paymentMethod
+      createdAt
     }
   }
 `;
@@ -70,7 +96,10 @@ export const GET_APP_GAIN_AND_FUNDS = gql`
       _id
       appGain
       totalPrice
+      carrierGain
       date
+      distanceKm
+      deliveryOption
     }
   }
 `;
@@ -83,7 +112,7 @@ export const GET_VEHICLE_TYPES = gql`
       description
       iconName
       iconURL
+      priceMultiplier
     }
   }
 `;
-

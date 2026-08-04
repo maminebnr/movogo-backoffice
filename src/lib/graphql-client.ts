@@ -1,20 +1,47 @@
 import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { ApolloLink } from "@apollo/client/link";
+import { ErrorLink } from "@apollo/client/link/error";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
-// Use fetch directly - if Chrome extension is causing issues, user should disable it
-// or use incognito mode
-const customFetch = typeof window !== "undefined" ? window.fetch.bind(window) : fetch;
+const customFetch =
+  typeof window !== "undefined" ? window.fetch.bind(window) : fetch;
 
-// Create an auth link that adds the token to headers
+function clearAuthAndRedirect() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("user");
+  if (!window.location.pathname.startsWith("/login")) {
+    window.location.href = "/login";
+  }
+}
+
+function isSessionExpired(error: unknown): boolean {
+  if (!CombinedGraphQLErrors.is(error)) return false;
+  return error.errors.some((e) => {
+    const code = (e.extensions as { code?: string } | undefined)?.code;
+    const msg = (e.message || "").toLowerCase();
+    // Do NOT treat login "Invalid credentials" (UNAUTHORIZED) as session expiry
+    return (
+      code === "FORBIDDEN" ||
+      code === "UNAUTHENTICATED" ||
+      msg.includes("not authenticated")
+    );
+  });
+}
+
+const errorLink = new ErrorLink(({ error }) => {
+  if (isSessionExpired(error)) {
+    clearAuthAndRedirect();
+  }
+});
+
 const authLink = new ApolloLink((operation, forward) => {
   try {
-    // Get the authentication token from localStorage if it exists
-    const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
-    
-    // Get existing headers
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+
     const existingHeaders = operation.getContext().headers || {};
-    
-    // Add the authorization header
+
     operation.setContext({
       headers: {
         ...existingHeaders,
@@ -22,7 +49,7 @@ const authLink = new ApolloLink((operation, forward) => {
         "content-type": "application/json",
       },
     });
-    
+
     return forward(operation);
   } catch (error) {
     console.error("Auth link error:", error);
@@ -30,19 +57,17 @@ const authLink = new ApolloLink((operation, forward) => {
   }
 });
 
+const graphqlUri = process.env.NEXT_PUBLIC_GRAPHQL_URL || "/api/graphql";
+
 const httpLink = new HttpLink({
-  uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || "https://apimovogo.persistatechnology.com/graphql",
-  credentials: "include",
-  fetchOptions: {
-    mode: "cors",
-  },
-  // Use the custom fetch to bypass extension interception
+  uri: graphqlUri,
+  credentials: "same-origin",
   fetch: customFetch,
 });
 
 export function createApolloClient() {
   return new ApolloClient({
-    link: authLink.concat(httpLink),
+    link: ApolloLink.from([errorLink, authLink, httpLink]),
     cache: new InMemoryCache(),
     defaultOptions: {
       watchQuery: {
@@ -54,11 +79,8 @@ export function createApolloClient() {
         errorPolicy: "all",
       },
       mutate: {
-        fetchPolicy: "no-cache",
         errorPolicy: "all",
       },
     },
   });
 }
-
-

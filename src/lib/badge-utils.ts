@@ -8,14 +8,17 @@ export function getStatusBadgeProps(status: string | null | undefined) {
 
   const normalizedStatus = status.toUpperCase().trim();
 
-  // Carrier statuses
   if (normalizedStatus === "ACTIVE") {
     return {
       variant: "default" as const,
       className: "bg-green-500 hover:bg-green-600 text-white border-green-600",
     };
   }
-  if (normalizedStatus === "INACTIVE" || normalizedStatus === "SUSPENDED") {
+  if (
+    normalizedStatus === "INACTIVE" ||
+    normalizedStatus === "SUSPENDED" ||
+    normalizedStatus === "BLOCKED"
+  ) {
     return {
       variant: "secondary" as const,
       className: "bg-red-500 hover:bg-red-600 text-white border-red-600",
@@ -28,20 +31,36 @@ export function getStatusBadgeProps(status: string | null | undefined) {
     };
   }
 
-  // Delivery statuses
-  if (normalizedStatus === "COMPLETED" || normalizedStatus === "DELIVERED") {
+  // Delivery statuses (Movogo enum)
+  if (
+    normalizedStatus === "PACKAGEDELIVERED" ||
+    normalizedStatus === "COMPLETED" ||
+    normalizedStatus === "DELIVERED"
+  ) {
     return {
       variant: "default" as const,
       className: "bg-green-500 hover:bg-green-600 text-white border-green-600",
     };
   }
-  if (normalizedStatus === "IN_PROGRESS" || normalizedStatus === "IN TRANSIT" || normalizedStatus === "PICKED_UP") {
+  if (
+    normalizedStatus === "ONTHEWAYTOPICKUP" ||
+    normalizedStatus === "ARRIVEDATPICKUP" ||
+    normalizedStatus === "ONTHEWAYTODROPOFF" ||
+    normalizedStatus === "ARRIVEDATDROPOFF" ||
+    normalizedStatus === "CARRIERASSIGNED" ||
+    normalizedStatus === "IN_PROGRESS" ||
+    normalizedStatus === "IN TRANSIT" ||
+    normalizedStatus === "PICKED_UP"
+  ) {
     return {
       variant: "outline" as const,
       className: "bg-blue-500 hover:bg-blue-600 text-white border-blue-600",
     };
   }
-  if (normalizedStatus === "PENDING" || normalizedStatus === "WAITING") {
+  if (
+    normalizedStatus === "ORDERCONFIRMED" ||
+    normalizedStatus === "WAITING"
+  ) {
     return {
       variant: "outline" as const,
       className: "bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-600",

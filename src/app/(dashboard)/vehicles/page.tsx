@@ -17,6 +17,7 @@ export default function VehiclesPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [iconURL, setIconURL] = useState("");
+  const [priceMultiplier, setPriceMultiplier] = useState("1");
   const [open, setOpen] = useState(false);
   const { data, loading: queryLoading, refetch } = useQuery(GET_VEHICLE_TYPES);
   const [addVehicleType, { loading }] = useMutation(ADD_VEHICLE_TYPE, {
@@ -27,6 +28,7 @@ export default function VehiclesPage() {
       setName("");
       setDescription("");
       setIconURL("");
+      setPriceMultiplier("1");
       refetch();
     },
     onError: (error) => {
@@ -40,12 +42,14 @@ export default function VehiclesPage() {
       toast.error("Please fill in the vehicle name");
       return;
     }
+    const multiplier = Number(priceMultiplier);
     await addVehicleType({
       variables: {
         input: {
           name,
           description: description || null,
           iconURL: iconURL || null,
+          priceMultiplier: Number.isFinite(multiplier) && multiplier >= 0.1 ? multiplier : 1,
         },
       },
     });
@@ -96,6 +100,18 @@ export default function VehiclesPage() {
                     placeholder="e.g., https://example.com/icon.png"
                   />
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="priceMultiplier">Price multiplier</Label>
+                  <Input
+                    id="priceMultiplier"
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    value={priceMultiplier}
+                    onChange={(e) => setPriceMultiplier(e.target.value)}
+                    placeholder="1"
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
@@ -119,7 +135,8 @@ export default function VehiclesPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Icon URL</TableHead>
+                <TableHead>Multiplier</TableHead>
+                <TableHead>Icon</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -128,6 +145,11 @@ export default function VehiclesPage() {
                   <TableRow key={vehicle._id}>
                     <TableCell className="font-medium">{vehicle.name}</TableCell>
                     <TableCell>{vehicle.description || "—"}</TableCell>
+                    <TableCell>
+                      {typeof vehicle.priceMultiplier === "number"
+                        ? `x${vehicle.priceMultiplier}`
+                        : "—"}
+                    </TableCell>
                     <TableCell>
                       {vehicle.iconURL ? (
                         <div className="flex items-center gap-2">
@@ -149,14 +171,14 @@ export default function VehiclesPage() {
                           </a>
                         </div>
                       ) : (
-                        "—"
+                        vehicle.iconName || "—"
                       )}
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-zinc-500 text-center">
+                  <TableCell colSpan={4} className="text-zinc-500 text-center">
                     No vehicle types found. Add one to get started.
                   </TableCell>
                 </TableRow>
