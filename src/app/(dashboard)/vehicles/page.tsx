@@ -7,11 +7,33 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { ADD_VEHICLE_TYPE } from "@/lib/graphql/mutations";
+import {
+  ADD_VEHICLE_TYPE,
+  DELETE_VEHICLE_TYPE,
+  UPDATE_VEHICLE_TYPE,
+} from "@/lib/graphql/mutations";
 import { GET_VEHICLE_TYPES } from "@/lib/graphql/queries";
+import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
+type VehicleRow = {
+  _id: string;
+  name: string;
+  description?: string;
+  iconName?: string;
+  iconURL?: string;
+  priceMultiplier?: number;
+};
 
 export default function VehiclesPage() {
   const [name, setName] = useState("");
@@ -19,11 +41,20 @@ export default function VehiclesPage() {
   const [iconURL, setIconURL] = useState("");
   const [priceMultiplier, setPriceMultiplier] = useState("1");
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selected, setSelected] = useState<VehicleRow | null>(null);
+
   const { data, loading: queryLoading, refetch } = useQuery(GET_VEHICLE_TYPES);
+
+  const vehicles: VehicleRow[] =
+    data && typeof data === "object" && Array.isArray((data as any).getVehicleTypes)
+      ? ((data as any).getVehicleTypes as VehicleRow[])
+      : [];
+
   const [addVehicleType, { loading }] = useMutation(ADD_VEHICLE_TYPE, {
     refetchQueries: [GET_VEHICLE_TYPES],
     onCompleted: () => {
-      toast.success("Vehicle type added successfully!");
+      toast.success("Vehicle type added");
       setOpen(false);
       setName("");
       setDescription("");
@@ -31,9 +62,24 @@ export default function VehiclesPage() {
       setPriceMultiplier("1");
       refetch();
     },
-    onError: (error) => {
-      toast.error(error.message || "Failed to add vehicle type");
+    onError: (error) => toast.error(error.message || "Failed to add vehicle type"),
+  });
+
+  const [updateVehicleType, { loading: updating }] = useMutation(UPDATE_VEHICLE_TYPE, {
+    onCompleted: () => {
+      toast.success("Vehicle type updated");
+      setEditOpen(false);
+      refetch();
     },
+    onError: (error) => toast.error(error.message || "Failed to update"),
+  });
+
+  const [deleteVehicleType, { loading: deleting }] = useMutation(DELETE_VEHICLE_TYPE, {
+    onCompleted: () => {
+      toast.success("Vehicle type deleted");
+      refetch();
+    },
+    onError: (error) => toast.error(error.message || "Failed to delete"),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,11 +101,100 @@ export default function VehiclesPage() {
     });
   };
 
+  const openEdit = (vehicle: VehicleRow) => {
+    setSelected(vehicle);
+    setName(vehicle.name);
+    setDescription(vehicle.description || "");
+    setIconURL(vehicle.iconURL || "");
+    setPriceMultiplier(
+      typeof vehicle.priceMultiplier === "number" ? String(vehicle.priceMultiplier) : "1",
+    );
+    setEditOpen(true);
+  };
+
+  const submitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selected) return;
+    const multiplier = Number(priceMultiplier);
+    await updateVehicleType({
+      variables: {
+        input: {
+          id: selected._id,
+          name,
+          description: description || null,
+          iconURL: iconURL || null,
+          priceMultiplier: Number.isFinite(multiplier) && multiplier >= 0.1 ? multiplier : 1,
+        },
+      },
+    });
+  };
+
+  const handleDelete = async (vehicle: VehicleRow) => {
+    if (!window.confirm(`Delete vehicle type "${vehicle.name}"?`)) return;
+    await deleteVehicleType({ variables: { id: vehicle._id } });
+  };
+
+  const formFields = (
+    <>
+      <div className="grid gap-2">
+        <Label htmlFor="name">Vehicle Name</Label>
+        <Input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="e.g., Van, Truck, Motorcycle"
+          required
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="description">Description (Optional)</Label>
+        <Input
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="e.g., Large capacity vehicle"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="iconURL">Icon URL (Optional)</Label>
+        <Input
+          id="iconURL"
+          value={iconURL}
+          onChange={(e) => setIconURL(e.target.value)}
+          placeholder="e.g., https://example.com/icon.png"
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="priceMultiplier">Price multiplier</Label>
+        <Input
+          id="priceMultiplier"
+          type="number"
+          min="0.1"
+          step="0.1"
+          value={priceMultiplier}
+          onChange={(e) => setPriceMultiplier(e.target.value)}
+          placeholder="1"
+        />
+      </div>
+    </>
+  );
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Vehicles</CardTitle>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (v) {
+              setName("");
+              setDescription("");
+              setIconURL("");
+              setPriceMultiplier("1");
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button>Add Vehicle Type</Button>
           </DialogTrigger>
@@ -67,52 +202,9 @@ export default function VehiclesPage() {
             <form onSubmit={handleSubmit}>
               <DialogHeader>
                 <DialogTitle>Add Vehicle Type</DialogTitle>
-                <DialogDescription>
-                  Add a new vehicle type to the system.
-                </DialogDescription>
+                <DialogDescription>Add a new vehicle type to the system.</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Vehicle Name</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g., Van, Truck, Motorcycle"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description (Optional)</Label>
-                  <Input
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="e.g., Large capacity vehicle"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="iconURL">Icon URL (Optional)</Label>
-                  <Input
-                    id="iconURL"
-                    value={iconURL}
-                    onChange={(e) => setIconURL(e.target.value)}
-                    placeholder="e.g., https://example.com/icon.png"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="priceMultiplier">Price multiplier</Label>
-                  <Input
-                    id="priceMultiplier"
-                    type="number"
-                    min="0.1"
-                    step="0.1"
-                    value={priceMultiplier}
-                    onChange={(e) => setPriceMultiplier(e.target.value)}
-                    placeholder="1"
-                  />
-                </div>
-              </div>
+              <div className="grid gap-4 py-4">{formFields}</div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                   Cancel
@@ -126,9 +218,7 @@ export default function VehiclesPage() {
         </Dialog>
       </CardHeader>
       <CardContent>
-        {queryLoading && (
-          <div className="text-center py-8 text-zinc-500">Loading...</div>
-        )}
+        {queryLoading && <div className="text-center py-8 text-zinc-500">Loading...</div>}
         {!queryLoading && (
           <Table>
             <TableHeader>
@@ -137,11 +227,12 @@ export default function VehiclesPage() {
                 <TableHead>Description</TableHead>
                 <TableHead>Multiplier</TableHead>
                 <TableHead>Icon</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data && typeof data === 'object' && 'getVehicleTypes' in data && Array.isArray((data as any).getVehicleTypes) && (data as any).getVehicleTypes.length > 0 ? (
-                ((data as any).getVehicleTypes as any[]).map((vehicle: any) => (
+              {vehicles.length > 0 ? (
+                vehicles.map((vehicle) => (
                   <TableRow key={vehicle._id}>
                     <TableCell className="font-medium">{vehicle.name}</TableCell>
                     <TableCell>{vehicle.description || "—"}</TableCell>
@@ -161,9 +252,9 @@ export default function VehiclesPage() {
                             className="rounded object-contain"
                             unoptimized
                           />
-                          <a 
-                            href={vehicle.iconURL} 
-                            target="_blank" 
+                          <a
+                            href={vehicle.iconURL}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline text-sm"
                           >
@@ -174,11 +265,34 @@ export default function VehiclesPage() {
                         vehicle.iconName || "—"
                       )}
                     </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+                          title="Edit"
+                          onClick={() => openEdit(vehicle)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                          title="Delete"
+                          disabled={deleting}
+                          onClick={() => handleDelete(vehicle)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-zinc-500 text-center">
+                  <TableCell colSpan={5} className="text-zinc-500 text-center">
                     No vehicle types found. Add one to get started.
                   </TableCell>
                 </TableRow>
@@ -187,6 +301,26 @@ export default function VehiclesPage() {
           </Table>
         )}
       </CardContent>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <form onSubmit={submitEdit}>
+            <DialogHeader>
+              <DialogTitle>Edit vehicle type</DialogTitle>
+              <DialogDescription>{selected?.name}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">{formFields}</div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updating}>
+                {updating ? "Saving..." : "Save"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -35,6 +35,7 @@ export const GET_ALL_ACCOUNTS = gql`
       email
       role
       verified
+      disabled
     }
   }
 `;
