@@ -54,11 +54,20 @@ export default function LoginPage() {
       }
 
       if (payload?.login?.accessToken) {
-        authLogin(payload.login.accessToken, {
-          id: "",
-          email,
-          role: "ADMIN",
-        });
+        const token = payload.login.accessToken;
+        let role = "ADMIN";
+        let id = "";
+        try {
+          const part = token.split(".")[1];
+          const json = JSON.parse(
+            atob(part.replace(/-/g, "+").replace(/_/g, "/")),
+          ) as { id?: string; role?: string };
+          if (json.role) role = json.role;
+          if (json.id) id = json.id;
+        } catch {
+          // keep defaults
+        }
+        authLogin(token, { id, email, role });
         toast.success(payload.login.message || "Login successful!");
         router.push("/dashboard");
         return;
