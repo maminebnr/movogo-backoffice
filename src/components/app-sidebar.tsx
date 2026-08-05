@@ -3,7 +3,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-import { Home, Package, Truck, Users, Car, UserCog, LogOut } from "lucide-react";
+import {
+  Home,
+  Package,
+  Truck,
+  Users,
+  Car,
+  UserCog,
+  LogOut,
+  Tag,
+  Settings,
+  TrendingUp,
+  Megaphone,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +32,10 @@ const navItems: NavItem[] = [
   { label: "Senders", href: "/senders", icon: Users },
   { label: "Vehicles", href: "/vehicles", icon: Car },
   { label: "Accounts", href: "/accounts", icon: UserCog },
+  { label: "Promos", href: "/promos", icon: Tag },
+  { label: "Pricing", href: "/pricing", icon: Settings },
+  { label: "Revenue", href: "/revenue", icon: TrendingUp },
+  { label: "Broadcast", href: "/broadcast", icon: Megaphone },
 ];
 
 export function AppSidebar() {
@@ -31,7 +47,7 @@ export function AppSidebar() {
         <Image src="/logo.svg" alt="Movogo" width={32} height={32} />
         <span className="font-semibold text-orange-600">Movogo Backoffice</span>
       </div>
-      <nav className="p-2 space-y-1 flex-1">
+      <nav className="p-2 space-y-1 flex-1 overflow-y-auto">
         {navItems.map(({ label, href, icon: Icon }) => {
           const active = pathname === href;
           return (
@@ -70,5 +86,3 @@ export function AppSidebar() {
     </aside>
   );
 }
-
-

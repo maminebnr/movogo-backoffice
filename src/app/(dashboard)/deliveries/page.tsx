@@ -27,8 +27,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Ban, RefreshCw } from "lucide-react";
+import { Ban, Eye, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { DeliveryDetailSheet } from "@/components/delivery-detail-sheet";
 
 const STATUSES = [
   "OrderConfirmed",
@@ -63,6 +64,7 @@ function DeliveryTable({
   loading,
   errorMessage,
   showCreatedAt = false,
+  onView,
   onCancel,
   onChangeStatus,
 }: {
@@ -70,6 +72,7 @@ function DeliveryTable({
   loading: boolean;
   errorMessage?: string;
   showCreatedAt?: boolean;
+  onView: (d: DeliveryRow) => void;
   onCancel: (d: DeliveryRow) => void;
   onChangeStatus: (d: DeliveryRow) => void;
 }) {
@@ -125,6 +128,15 @@ function DeliveryTable({
                 )}
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:bg-orange-50 hover:text-orange-600"
+                      title="View details"
+                      onClick={() => onView(delivery)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -191,6 +203,8 @@ export default function DeliveriesPage() {
   const [statusOpen, setStatusOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [nextStatus, setNextStatus] = useState<string>("OrderConfirmed");
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const refetchAllTabs = () => {
     refetchToday();
@@ -216,6 +230,11 @@ export default function DeliveriesPage() {
     },
     onError: (err) => toast.error(err.message || "Status update failed"),
   });
+
+  const openDetail = (d: DeliveryRow) => {
+    setDetailId(d._id);
+    setDetailOpen(true);
+  };
 
   const openCancel = (d: DeliveryRow) => {
     setSelected(d);
@@ -255,6 +274,7 @@ export default function DeliveriesPage() {
   };
 
   const tableProps = {
+    onView: openDetail,
     onCancel: openCancel,
     onChangeStatus: openStatus,
   };
@@ -367,6 +387,13 @@ export default function DeliveriesPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <DeliveryDetailSheet
+        deliveryId={detailId}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onUpdated={refetchAllTabs}
+      />
     </>
   );
 }
