@@ -36,10 +36,18 @@ type VehicleRow = {
 };
 
 export default function VehiclesPage() {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [iconURL, setIconURL] = useState("");
-  const [priceMultiplier, setPriceMultiplier] = useState("1");
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    description: "",
+    iconURL: "",
+    priceMultiplier: "1",
+  });
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    iconURL: "",
+    priceMultiplier: "1",
+  });
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selected, setSelected] = useState<VehicleRow | null>(null);
@@ -56,10 +64,7 @@ export default function VehiclesPage() {
     onCompleted: () => {
       toast.success("Vehicle type added");
       setOpen(false);
-      setName("");
-      setDescription("");
-      setIconURL("");
-      setPriceMultiplier("1");
+      setCreateForm({ name: "", description: "", iconURL: "", priceMultiplier: "1" });
       refetch();
     },
     onError: (error) => toast.error(error.message || "Failed to add vehicle type"),
@@ -84,17 +89,17 @@ export default function VehiclesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) {
+    if (!createForm.name) {
       toast.error("Please fill in the vehicle name");
       return;
     }
-    const multiplier = Number(priceMultiplier);
+    const multiplier = Number(createForm.priceMultiplier);
     await addVehicleType({
       variables: {
         input: {
-          name,
-          description: description || null,
-          iconURL: iconURL || null,
+          name: createForm.name,
+          description: createForm.description || null,
+          iconURL: createForm.iconURL || null,
           priceMultiplier: Number.isFinite(multiplier) && multiplier >= 0.1 ? multiplier : 1,
         },
       },
@@ -103,26 +108,27 @@ export default function VehiclesPage() {
 
   const openEdit = (vehicle: VehicleRow) => {
     setSelected(vehicle);
-    setName(vehicle.name);
-    setDescription(vehicle.description || "");
-    setIconURL(vehicle.iconURL || "");
-    setPriceMultiplier(
-      typeof vehicle.priceMultiplier === "number" ? String(vehicle.priceMultiplier) : "1",
-    );
+    setEditForm({
+      name: vehicle.name,
+      description: vehicle.description || "",
+      iconURL: vehicle.iconURL || "",
+      priceMultiplier:
+        typeof vehicle.priceMultiplier === "number" ? String(vehicle.priceMultiplier) : "1",
+    });
     setEditOpen(true);
   };
 
   const submitEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected) return;
-    const multiplier = Number(priceMultiplier);
+    const multiplier = Number(editForm.priceMultiplier);
     await updateVehicleType({
       variables: {
         input: {
           id: selected._id,
-          name,
-          description: description || null,
-          iconURL: iconURL || null,
+          name: editForm.name,
+          description: editForm.description || null,
+          iconURL: editForm.iconURL || null,
           priceMultiplier: Number.isFinite(multiplier) && multiplier >= 0.1 ? multiplier : 1,
         },
       },
@@ -134,45 +140,49 @@ export default function VehiclesPage() {
     await deleteVehicleType({ variables: { id: vehicle._id } });
   };
 
-  const formFields = (
+  const renderFormFields = (
+    form: typeof createForm,
+    setForm: React.Dispatch<React.SetStateAction<typeof createForm>>,
+    idPrefix: string,
+  ) => (
     <>
       <div className="grid gap-2">
-        <Label htmlFor="name">Vehicle Name</Label>
+        <Label htmlFor={`${idPrefix}-name`}>Vehicle Name</Label>
         <Input
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          id={`${idPrefix}-name`}
+          value={form.name}
+          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           placeholder="e.g., Van, Truck, Motorcycle"
           required
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="description">Description (Optional)</Label>
+        <Label htmlFor={`${idPrefix}-description`}>Description (Optional)</Label>
         <Input
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          id={`${idPrefix}-description`}
+          value={form.description}
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           placeholder="e.g., Large capacity vehicle"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="iconURL">Icon URL (Optional)</Label>
+        <Label htmlFor={`${idPrefix}-iconURL`}>Icon URL (Optional)</Label>
         <Input
-          id="iconURL"
-          value={iconURL}
-          onChange={(e) => setIconURL(e.target.value)}
+          id={`${idPrefix}-iconURL`}
+          value={form.iconURL}
+          onChange={(e) => setForm((f) => ({ ...f, iconURL: e.target.value }))}
           placeholder="e.g., https://example.com/icon.png"
         />
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="priceMultiplier">Price multiplier</Label>
+        <Label htmlFor={`${idPrefix}-priceMultiplier`}>Price multiplier</Label>
         <Input
-          id="priceMultiplier"
+          id={`${idPrefix}-priceMultiplier`}
           type="number"
           min="0.1"
           step="0.1"
-          value={priceMultiplier}
-          onChange={(e) => setPriceMultiplier(e.target.value)}
+          value={form.priceMultiplier}
+          onChange={(e) => setForm((f) => ({ ...f, priceMultiplier: e.target.value }))}
           placeholder="1"
         />
       </div>
@@ -188,10 +198,7 @@ export default function VehiclesPage() {
           onOpenChange={(v) => {
             setOpen(v);
             if (v) {
-              setName("");
-              setDescription("");
-              setIconURL("");
-              setPriceMultiplier("1");
+              setCreateForm({ name: "", description: "", iconURL: "", priceMultiplier: "1" });
             }
           }}
         >
@@ -204,7 +211,9 @@ export default function VehiclesPage() {
                 <DialogTitle>Add Vehicle Type</DialogTitle>
                 <DialogDescription>Add a new vehicle type to the system.</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">{formFields}</div>
+              <div className="grid gap-4 py-4">
+                {renderFormFields(createForm, setCreateForm, "create")}
+              </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                   Cancel
@@ -309,7 +318,9 @@ export default function VehiclesPage() {
               <DialogTitle>Edit vehicle type</DialogTitle>
               <DialogDescription>{selected?.name}</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">{formFields}</div>
+            <div className="grid gap-4 py-4">
+              {renderFormFields(editForm, setEditForm, "edit")}
+            </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
                 Cancel

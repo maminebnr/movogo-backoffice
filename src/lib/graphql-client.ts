@@ -79,7 +79,7 @@ export function createApolloClient() {
         errorPolicy: "all",
       },
       mutate: {
-        errorPolicy: "all",
+        errorPolicy: "none",
       },
     },
   });

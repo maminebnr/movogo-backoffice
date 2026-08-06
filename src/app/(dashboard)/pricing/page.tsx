@@ -88,7 +88,15 @@ export default function PricingPage() {
     const values: Record<string, number> = {};
     for (const { key } of FIELDS) {
       const num = Number(form[key]);
-      if (!Number.isFinite(num) || num < 0) {
+      if (!Number.isFinite(num)) {
+        toast.error(`Enter a valid value for ${FIELDS.find((f) => f.key === key)?.label}`);
+        return;
+      }
+      if ((key === "minInWallet" || key === "minAbsolute") && num > 0) {
+        toast.error(`${FIELDS.find((f) => f.key === key)?.label} must be zero or negative`);
+        return;
+      }
+      if (key !== "minInWallet" && key !== "minAbsolute" && num < 0) {
         toast.error(`Enter a valid value for ${FIELDS.find((f) => f.key === key)?.label}`);
         return;
       }
